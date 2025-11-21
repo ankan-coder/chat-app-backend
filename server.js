@@ -2,6 +2,7 @@ require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const http = require('http');
+const fs = require('fs');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const connectDB = require('./config/database');
@@ -13,8 +14,8 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:5500",
-        methods: ["GET", "POST"]
+        origin: '*',
+        methods: ['GET', 'POST']
     }
 });
 
@@ -22,7 +23,7 @@ connectDB();
 initializeSocket(io);
 
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "*",
+    origin: (origin, callback) => callback(null, true),
     credentials: true
 }));
 app.use(express.json());
@@ -49,7 +50,12 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+const frontendPath = path.join(__dirname, '..', 'frontend');
+const hasFrontendBundle = fs.existsSync(path.join(frontendPath, 'index.html'));
+
+if (hasFrontendBundle) {
+    app.use(express.static(frontendPath));
+}
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/messages', require('./routes/messages'));
@@ -64,7 +70,14 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+    if (hasFrontendBundle) {
+        return res.sendFile(path.join(frontendPath, 'index.html'));
+    }
+
+    return res.json({
+        status: 'Backend running',
+        frontend: process.env.FRONTEND_URL || 'Hosted separately',
+    });
 });
 
 app.use(errorHandler);
