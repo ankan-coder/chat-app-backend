@@ -1,0 +1,35 @@
+node_modules/
+.env
+.DS_Store
+*.log
+dist/
+build/
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Test coverage
+coverage/
+
+# Production build
+dist/
+build/
+
